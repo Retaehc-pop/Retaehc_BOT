@@ -12,7 +12,7 @@ class NSFW(commands.Cog):
     async def insult(self, ctx, member: discord.Member = None):
         insult = await get_momma_jokes()
         if member is not None:
-            await ctx.send(f"{member.name.mention} eat this: {insult} ")
+            await ctx.send(f"{member.mention} eat this: {insult} ")
         else:
             await ctx.send(f"{ctx.message.author.name} for yourself: {insult}")
 
