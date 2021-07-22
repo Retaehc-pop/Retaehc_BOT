@@ -22,7 +22,7 @@ class Basic(commands.Cog):
     async def owo(self, ctx):
         embed = discord.Embed(colour=0xffc2c8)
         embed.add_field(name="UWU", value=str(text_to_owo(ctx.message.content)))
-        await ctx.send(embed)
+        await ctx.send(embed=embed)
 
     @commands.command(brief="Creates an invite link to the channel")
     @commands.guild_only()
