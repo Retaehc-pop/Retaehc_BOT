@@ -8,7 +8,7 @@ import discord
 # import praw
 import asyncpraw
 
-from settings import REDDIT_APP_ID, REDDIT_APP_SECRET, REDDIT_SUBREDDITS, REDDIT_NSFW_SUBREDDITS
+from settings import REDDIT_APP_ID, REDDIT_APP_SECRET
 
 
 class Images(commands.Cog):
@@ -24,14 +24,7 @@ class Images(commands.Cog):
         async with ctx.channel.typing():
             if self.reddit:
                 nsfw_flag = False
-                rnd = random.randint(0, len(REDDIT_SUBREDDITS))
-                chosen_subreddit = REDDIT_SUBREDDITS[rnd]
-                if subreddit:
-                    if subreddit in REDDIT_NSFW_SUBREDDITS:
-                        chosen_subreddit = subreddit
-                        nsfw_flag = True
-                    else:
-                        chosen_subreddit = subreddit
+                chosen_subreddit = subreddit
 
                 a = await self.reddit.subreddit(chosen_subreddit)
                 submissions = a.hot()
