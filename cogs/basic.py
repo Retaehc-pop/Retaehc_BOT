@@ -11,8 +11,17 @@ class Basic(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx, ex):
-        print(ex)
+    async def on_command_error(self, ctx, e):
+        if str(e).find('.') != -1:
+            return
+
+        embed = discord.Embed(title="Command_Error",
+                              description=f'->{e}',
+                              colour=0xf94324)
+        await ctx.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_error(self, ctx, ex):
         embed = discord.Embed(title="Error",
                               description=str(ex),
                               colour=0xf94324)
@@ -74,68 +83,93 @@ class Basic(commands.Cog):
 
     @commands.command(case_insensitive=True, aliases=["remind", "remindme", "remind_me", "alarm"])
     @commands.bot_has_permissions(attach_files=True, embed_links=True)
-    async def reminder(self, ctx, time, *, reminder, role: discord.Role):
-        """set reminder (time dhms or dd:mm:yy:hh:mm:ss) (reminder)"""
-        embed = discord.Embed(title="Reminder", description=f"{reminder} in {time}",
-                              color=0x5cbac4, timestamp=datetime.utcnow())
+    async def reminder(self, ctx, time, *, reminder: str):
+        """set reminder (time d.h.m.s or dd:mm:yy:hh:mm:ss) (reminder)"""
+        print(reminder)
+        embed = discord.Embed(title="Reminder", description=f"{reminder} in {time}", color=0x5cbac4,
+                              timestamp=datetime.utcnow())
         embed.set_footer(text="If you have any questions send feedback to POP")
         embed.set_author(name=ctx.author, icon_url=f"{ctx.author.avatar_url}")
-        seconds = 0
         if reminder is None:
-            embed.add_field(name='Warning',
-                            value='Please specify what do you want me to remind you about.')  # Error message
-            await ctx.send(embed=embed)
+            await ctx.send(embed=discord.Embed(title="Warning",
+                                               description='Please specify what do you want me to remind you about.',
+                                               color=0xf94324))
             return
+
         elif time is None:
-            embed.add_field(name='Warning',
-                            value='Please specify time')  # Error message
-            await ctx.send(embed=embed)
+            await ctx.send(embed=discord.Embed(title="Warning", description='Please specify time.', color=0xf94324))
             return
-        else:
-            if time.find('/') == -1:
-                counter = ""
-                if time.lower().endswith("d"):
+
+        r = reminder.split(' ')
+        roles = []
+        for item in r:
+            if item.startswith("<@&") and item.endswith(">"):
+                roles.append(int(item[3:-1]))
+
+        if time.find(':') == -1:
+            counter = ""
+            seconds = 0
+            Time = time.lower().split('.')
+            for time in Time:
+                if time.endswith('d'):
                     seconds += int(time[:-1]) * 60 * 60 * 24
-                    counter = f"{seconds // 60 // 60 // 24} days"
-                if time.lower().endswith("h"):
+                    counter += f"{time[:-1]} D"
+                elif time.endswith('h'):
                     seconds += int(time[:-1]) * 60 * 60
-                    counter = f"{seconds // 60 // 60} hours"
-                elif time.lower().endswith("m"):
+                    counter += f"{time[:-1]} H"
+                elif time.endswith('m'):
                     seconds += int(time[:-1]) * 60
-                    counter = f"{seconds // 60} minutes"
-                elif time.lower().endswith("s"):
+                    counter += f"{time[:-1]} M"
+                elif time.endswith('s'):
                     seconds += int(time[:-1])
-                    counter = f"{seconds} seconds"
-                if seconds == 0:
-                    embed.add_field(name='Warning',
-                                    value='Please specify a proper duration, send `reminder_help` for more information.')
-                elif seconds > 7776000:
-                    embed.add_field(name='Warning',
-                                    value='You have specified a too long duration!\nMaximum duration is 90 days.')
-                else:
-                    await ctx.send(embed=embed)
-                    await asyncio.sleep(seconds)
-                    await ctx.send(f"Hi, {ctx.author.mention} asked me to remind you about {reminder} {counter} ago.")
-                    return
-            else:
-                counter = time.split(":")
-                if len(counter) != 6:
-                    embed.add_field(name='Warning',
-                                    value='Please specify time')  # Error message
-                    await ctx.send(embed=embed)
-                    return
+                    counter += f"{time[:-1]} S"
 
-                dt = datetime(day=int(counter[0]), month=int(counter[1]), year=int(counter[2]),
-                              hour=int(counter[3]), minute=int(counter[4]), second=int(counter[5]))
-                now = datetime.now()
-                delta = dt - datetime.now()
-                seconds = (delta.days * 86400) + delta.seconds
-                embed.add_field(name="you will be alarm at",
-                                value=f"{dt.day}/{dt.month}/{dt.year} at {dt.hour}:{dt.minute}:{dt.second}")
+            if seconds <= 0:
+                await ctx.send(embed=discord.Embed(title="Warning",
+                                                   description='Please specify a proper duration: Time cant be lower than 0',
+                                                   color=0xf94324))
+                return
+            elif seconds > 7776000:
+                await ctx.send(embed=discord.Embed(title="Warning",
+                                                   description='You have specified a too long duration!\nMaximum duration is 90 days.',
+                                                   color=0xf94324))
+                return
+
+            embed.add_field(name=f'{ctx.author}', value=f'Reminder in {counter} about {reminder}')
+            await ctx.send(embed=embed)
+            await asyncio.sleep(seconds)
+            await ctx.send(f"{ctx.author.mention}")
+            for role in roles:
+                await ctx.send(discord.utils.get(ctx.guild.roles,id=role).mention)
+            await ctx.send(
+                embed=discord.Embed(title='Reminder', description=f'{reminder} {counter} ago', color=0x5cbac4,
+                                    timestamp=datetime.utcnow()))
+            return
+
+        else:
+            counter = time.split(":")
+            if len(counter) != 6:
+                embed.add_field(name='Warning',
+                                value='Please specify time')  # Error message
                 await ctx.send(embed=embed)
-                await asyncio.sleep(seconds)
-                await ctx.send(f"{ctx.author.mention} asked me to remind {role} about {reminder} since {now}.")
+                return
 
+            dt = datetime(day=int(counter[0]), month=int(counter[1]), year=int(counter[2]),
+                          hour=int(counter[3]), minute=int(counter[4]), second=int(counter[5]))
+            now = datetime.utcnow()
+            delta = dt - datetime.now()
+            seconds = (delta.days * 86400) + delta.seconds
+            embed.add_field(name="Reminder in ",
+                            value=f"{dt.day}/{dt.month}/{dt.year} at {dt.hour}:{dt.minute}:{dt.second}")
+            await ctx.send(embed=embed)
+            await ctx.send(seconds)
+            await asyncio.sleep(seconds)
+            await ctx.send(f"{ctx.author.mention}")
+            for role in roles:
+                await ctx.send(discord.utils.get(ctx.guild.roles, id=role).mention)
+            await ctx.send(
+                embed=discord.Embed(title='Reminder', description=f'{reminder} {counter} ago', color=0x5cbac4,
+                                    timestamp=datetime.utcnow()))
 
 def setup(bot):
     bot.add_cog(Basic(bot))
