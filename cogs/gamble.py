@@ -8,9 +8,9 @@ class Gamble(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(brief="Gives a random number between 1 and 100")
-    async def randint(self, ctx):
-        n = random.randrange(1, 101)
+    @commands.command(brief="Gives a random number between [start] and [stop]")
+    async def randint(self, ctx, start=0, stop=100):
+        n = random.randrange(int(start), int(stop))
         embed = discord.Embed(title=str(n),colour=0x006798)
         await ctx.send(embed=embed)
 

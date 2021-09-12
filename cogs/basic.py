@@ -10,23 +10,6 @@ class Basic(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, e):
-        if str(e).find('.') != -1:
-            return
-
-        embed = discord.Embed(title="Command_Error",
-                              description=f'->{e}',
-                              colour=0xf94324)
-        await ctx.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_error(self, ctx, ex):
-        embed = discord.Embed(title="Error",
-                              description=str(ex),
-                              colour=0xf94324)
-        await ctx.send(embed=embed)
-
     @commands.command(brief="Any message to owo")
     async def owo(self, ctx):
         embed = discord.Embed(colour=0xffc2c8)
