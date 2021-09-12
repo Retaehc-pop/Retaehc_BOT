@@ -27,7 +27,7 @@ go to `settings_file` and change you ID and secret
 ### Gamble:
   1. `coin`     Heads or Tails
   2. `dice`     Random number between 1 and 6
-  3. `randint`  Give a random number between 1 and 100
+  3. `randint`  Give a random number between [start] and [stop]
 ### Games:
   1. `guess`    User need to guess from 1 - 10
   2. `hangman`  Play hangman
